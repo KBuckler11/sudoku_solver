@@ -1,0 +1,110 @@
+import random
+
+
+def fill_diagonal_subgrids(grid):
+    for i in range(0, 9, 3):
+        fill_subgrid(grid, i, i)
+
+
+def fill_subgrid(grid, row, col):
+    nums = list(range(1, 10))
+    random.shuffle(nums)
+    for i in range(3):
+        for j in range(3):
+            grid[row + i][col + j] = nums.pop()
+
+
+def remove_numbers(grid, level=40):
+    """Remove numbers from the grid to create a puzzle with 'level' empty spots."""
+    attempts = level
+    while attempts > 0:
+        row = random.randint(0, 8)
+        col = random.randint(0, 8)
+        while grid[row][col] == 0:
+            row = random.randint(0, 8)
+            col = random.randint(0, 8)
+        grid[row][col] = 0
+        attempts -= 1
+
+
+def create_sudoku():
+    grid = [[0 for _ in range(9)] for _ in range(9)]
+    fill_diagonal_subgrids(grid)
+    if solve_sudoku(grid):
+        remove_numbers(grid)  # Adjust the difficulty as needed
+    return grid
+
+
+def is_valid(grid, row, col, num):
+    # Check row and column
+    for i in range(9):
+        if grid[row][i] == num or grid[i][col] == num:
+            return False
+    # Check 3x3 subgrid
+    subgrid_row, subgrid_col = 3 * (row // 3), 3 * (col // 3)
+    for i in range(3):
+        for j in range(3):
+            if grid[subgrid_row + i][subgrid_col + j] == num:
+                return False
+    return True
+
+
+def find_empty(grid):
+    for i in range(9):
+        for j in range(9):
+            if grid[i][j] == 0:
+                return (i, j)
+    return None
+
+
+def solve_sudoku(grid, step_by_step=False):
+    empty = find_empty(grid)
+    if not empty:
+        return True  # Grid fully filled
+    row, col = empty
+
+    for num in range(1, 10):
+        if is_valid(grid, row, col, num):
+            grid[row][col] = num
+            if step_by_step:
+                print(f"Placing {num} at ({row + 1}, {col + 1})")
+                display_sudoku(grid)
+                print("\n")
+            if solve_sudoku(grid, step_by_step):
+                return True
+            grid[row][col] = 0  # Backtrack
+    return False
+
+
+def create_sudoku():
+    grid = [[0 for _ in range(9)] for _ in range(9)]
+    fill_diagonal_subgrids(grid)
+    if solve_sudoku(grid):  # Use solve_sudoku to fill the grid
+        remove_numbers(grid)  # Adjust the difficulty as needed
+    else:
+        raise Exception("Failed to generate a valid Sudoku grid")
+    return grid
+
+
+def display_sudoku(grid):
+    for i, row in enumerate(grid):
+        if i % 3 == 0 and i != 0:
+            print('- - - - - - - - - - - -')
+        for j, val in enumerate(row):
+            if j % 3 == 0 and j != 0:
+                print('| ', end='')
+            if j == 8:
+                print(val)
+            else:
+                print(str(val) + ' ', end='')
+
+grid = create_sudoku()
+print('\nThe grid is numbered from the top left to the bottom right. The top left cell is labelled (1,1)')
+print("\nInitial Puzzle:")
+display_sudoku(grid)
+
+print("\nSolving Puzzle Step by Step:")
+solve_sudoku(grid, step_by_step=True)
+
+print("\nSolved Puzzle:")
+display_sudoku(grid)
